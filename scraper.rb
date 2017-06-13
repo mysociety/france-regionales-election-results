@@ -4,9 +4,10 @@ require 'bundler/setup'
 require 'require_all'
 require 'scraped'
 require 'scraperwiki'
+require 'table_unspanner'
 
-# require 'open-uri/cached'
-# OpenURI::Cache.cache_path = '.cache'
+require 'open-uri/cached'
+OpenURI::Cache.cache_path = '.cache'
 
 # require_rel 'lib'
 
@@ -24,32 +25,46 @@ end
 class ElectionResultsPage < Scraped::HTML
   field :region_urls do
     noko.css('#listeRG option/@value').drop(1).map do |result_url|
-      URI.join(url, result_url).to_s
+      URI.join(url, result_url.to_s.gsub(%r{/(\d+)\.}, '/CR\1.')).to_s
     end
   end
 end
 
-class RegionResultsPage < Scraped::HTML
-  field :id do
-    url.split('/').last.chomp('.html')
+class CouncilMember < Scraped::HTML
+  field :name do
+    tds.size == 3 ? tds[2].text : tds[1].text
   end
 
-  field :region_name do
-    noko.css('.pub-resultats-entete h2:first').text
+  field :election_area do
+    tds.size == 3 ? tds[1].text : ''
   end
 
-  field :winner_name do
-    winner_row.xpath('./td[1]/a/text()').text
-  end
-
-  field :winner_party_code do
-    winner_row.xpath('./td[2]/text()').text
+  field :party_code do
+    tds[0].text.match(/\((\w+)\)/)[1]
   end
 
   private
 
-  def winner_row
-    noko.xpath('.//table[1]/tbody/tr[1]')
+  def tds
+    noko.css('td')
+  end
+end
+
+class RegionResultsPage < Scraped::HTML
+  field :councillors do
+    table.xpath('.//tr[td]').map do |row|
+      fragment(row => CouncilMember).to_h.merge(region: region)
+    end
+  end
+
+  field :region do
+    noko.at_css('h2').text.gsub('Conseil Régional de la région : ', '')
+  end
+
+  private
+
+  def table
+    @table ||= TableUnspanner::UnspannedTable.new(noko.at_css('table')).nokogiri_node
   end
 end
 
@@ -61,7 +76,7 @@ page = scrape(results_url => ElectionResultsPage)
 
 page.region_urls.each do |url|
   region = scrape(url => RegionResultsPage)
-  data = region.to_h
-  data[:winner_party] = parties[data[:winner_party_code]]
-  ScraperWiki.save_sqlite([:id], data)
+  region.councillors.each do |c|
+    ScraperWiki.save_sqlite([:name], c.merge(party: parties[c[:party_code]]))
+  end
 end
