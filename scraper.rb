@@ -5,8 +5,8 @@ require 'require_all'
 require 'scraped'
 require 'scraperwiki'
 
-require 'open-uri/cached'
-OpenURI::Cache.cache_path = '.cache'
+# require 'open-uri/cached'
+# OpenURI::Cache.cache_path = '.cache'
 
 # require_rel 'lib'
 
@@ -65,4 +65,3 @@ page.region_urls.each do |url|
   data[:winner_party] = parties[data[:winner_party_code]]
   ScraperWiki.save_sqlite([:id], data)
 end
-
