@@ -5,6 +5,8 @@ require 'require_all'
 require 'scraped'
 require 'scraperwiki'
 require 'table_unspanner'
+require 'active_support'
+require 'active_support/core_ext/string'
 
 # require 'open-uri/cached'
 # OpenURI::Cache.cache_path = '.cache'
@@ -31,6 +33,10 @@ class ElectionResultsPage < Scraped::HTML
 end
 
 class CouncilMember < Scraped::HTML
+  field :id do
+    name.parameterize
+  end
+
   field :name do
     tds.size == 3 ? tds[2].text : tds[1].text
   end
@@ -77,6 +83,6 @@ page = scrape(results_url => ElectionResultsPage)
 page.region_urls.each do |url|
   region = scrape(url => RegionResultsPage)
   region.councillors.each do |c|
-    ScraperWiki.save_sqlite([:name], c.merge(party: parties[c[:party_code]]))
+    ScraperWiki.save_sqlite([:id], c.merge(party: parties[c[:party_code]]))
   end
 end

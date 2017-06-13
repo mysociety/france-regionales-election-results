@@ -6,6 +6,7 @@ ruby '2.4.1'
 
 git_source(:github) { |repo_name| "https://github.com/#{repo_name}.git" }
 
+gem 'activesupport'
 gem 'open-uri-cached'
 gem 'require_all'
 gem 'scraped', github: 'everypolitician/scraped'
