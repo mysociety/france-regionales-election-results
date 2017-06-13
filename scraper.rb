@@ -6,8 +6,8 @@ require 'scraped'
 require 'scraperwiki'
 require 'table_unspanner'
 
-require 'open-uri/cached'
-OpenURI::Cache.cache_path = '.cache'
+# require 'open-uri/cached'
+# OpenURI::Cache.cache_path = '.cache'
 
 # require_rel 'lib'
 
