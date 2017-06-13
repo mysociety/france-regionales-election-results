@@ -11,6 +11,7 @@ gem 'require_all'
 gem 'scraped', github: 'everypolitician/scraped'
 gem 'scraperwiki', github: 'openaustralia/scraperwiki-ruby',
                    branch: 'morph_defaults'
+gem 'table_unspanner', github: 'everypolitician/table_unspanner'
 
 group :development do
   gem 'pry'
