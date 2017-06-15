@@ -7,6 +7,7 @@ require 'scraperwiki'
 require 'table_unspanner'
 require 'active_support'
 require 'active_support/core_ext/string'
+require 'csv'
 
 # require 'open-uri/cached'
 # OpenURI::Cache.cache_path = '.cache'
@@ -17,6 +18,8 @@ def scrape(h)
   url, klass = h.to_a.first
   klass.new(response: Scraped::Request.new(url: url).response)
 end
+
+REGION_NAME_MAPPING = CSV.read('region-name-mapping.csv').drop(1).map(&:reverse).to_h
 
 class PartyListPage < Scraped::HTML
   field :party_lookup do
@@ -59,12 +62,12 @@ end
 class RegionResultsPage < Scraped::HTML
   field :councillors do
     table.xpath('.//tr[td]').map do |row|
-      fragment(row => CouncilMember).to_h.merge(region: region)
+      fragment(row => CouncilMember)
     end
   end
 
-  field :region do
-    noko.at_css('h2').text.gsub('Conseil Régional de la région : ', '')
+  field :name do
+    REGION_NAME_MAPPING.fetch(noko.at_css('h2').text.gsub('Conseil Régional de la région : ', ''))
   end
 
   private
@@ -83,6 +86,6 @@ page = scrape(results_url => ElectionResultsPage)
 page.region_urls.each do |url|
   region = scrape(url => RegionResultsPage)
   region.councillors.each do |c|
-    ScraperWiki.save_sqlite([:id], c.merge(party: parties[c[:party_code]]))
+    ScraperWiki.save_sqlite([:id], c.to_h.merge(party: parties[c.party_code], region_name: region.name))
   end
 end
