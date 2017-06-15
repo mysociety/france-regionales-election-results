@@ -90,6 +90,6 @@ page = scrape(results_url => ElectionResultsPage)
 page.region_urls.each do |url|
   region = scrape(url => RegionResultsPage)
   region.councillors.each do |c|
-    ScraperWiki.save_sqlite([:id], c.to_h.merge(party: parties[c.party_code], region_name: region.name))
+    ScraperWiki.save_sqlite([:id], c.to_h.merge(party: parties[c.party_code], region: region.name))
   end
 end
