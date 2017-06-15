@@ -48,6 +48,10 @@ class CouncilMember < Scraped::HTML
     tds.size == 3 ? tds[1].text : ''
   end
 
+  field :region_insee_code do
+    url.split('/')[-2]
+  end
+
   field :party_code do
     tds[0].text.match(/\((\w+)\)/)[1]
   end
