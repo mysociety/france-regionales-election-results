@@ -56,6 +56,10 @@ class CouncilMember < Scraped::HTML
     tds[0].text.match(/\((\w+)\)/)[1]
   end
 
+  field :gender do
+    name.match(/^M\. /) ? 'M' : name.gsub(/^Mme /) ? 'F' : ''
+  end
+
   private
 
   def tds
